@@ -13,7 +13,7 @@
     <script>
       FHIR.oauth2.authorize({
         'client_id': 'BasePractice-102-AuthCode-325a573351353233324c', //Your app client ID
-        'scope': 'patient/*.read launch fhirUser offline_access openid' //'launch user/*.* openid profile' //'patient/*.read launch'
+        'scope': 'openid offline_access fhirUser user/*.read launch/patient launch' //'launch user/*.* openid profile' //'patient/*.read launch'
       });
     </script>
     <div class="spinner">
