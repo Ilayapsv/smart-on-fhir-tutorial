@@ -67,26 +67,108 @@
       </table>
     </div>
 
-    <!-- Application-level javascript-->
-    <script src='./src/js/example-smart-app.js'></script>
+    <!-- Application-level javascript
+    <script src='./src/js/example-smart-app.js'></script>-->
 
     <!-- FHIR Client JS Library -->
     <script src='./lib/js/fhir-client.js'></script>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script>
-      extractData().then(
-        //Display Patient Demographics and Observations if extractData was success
+      /*
+	  extractData().then(
         function(p) {
           drawVisualization(p);
         },
 
-        //Display 'Failed to call FHIR Service' if extractData failed
         function() {
           $('#loading').hide();
           $('#errors').html('<p> Failed to call FHIR Service </p>');
         }
       );
+	  */
+	  
+	  function defaultPatient(){
+		return {
+		  fname: {value: ''},
+		  lname: {value: ''},
+		  gender: {value: ''},
+		  birthdate: {value: ''},
+		  // lymph: {value: ''}
+
+		  // Cerner SoF Tutorial Observations
+		  height: {value: ''},
+		  systolicbp: {value: ''},
+		  diastolicbp: {value: ''},
+		  ldl: {value: ''},
+		  hdl: {value: ''},
+		};
+	  }
+	  
+		function getBloodPressureValue(BPObservations, typeOfPressure) {
+		var formattedBPObservations = [];
+		BPObservations.forEach(function(observation){
+		  var BP = observation.component.find(function(component){
+			return component.code.coding.find(function(coding) {
+			  return coding.code == typeOfPressure;
+			});
+		  });
+		  if (BP) {
+			observation.valueQuantity = BP.valueQuantity;
+			formattedBPObservations.push(observation);
+		  }
+		});
+
+		return getQuantityValueAndUnit(formattedBPObservations[0]);
+		}
+
+		function getQuantityValueAndUnit(ob) {
+		if (typeof ob != 'undefined' &&
+			typeof ob.valueQuantity != 'undefined' &&
+			typeof ob.valueQuantity.value != 'undefined' &&
+			typeof ob.valueQuantity.unit != 'undefined') {
+			  return ob.valueQuantity.value + ' ' + ob.valueQuantity.unit;
+		} else {
+		  return undefined;
+		}
+		}
+	  
+		drawVisualization = function(p) {
+			$('#holder').show();
+			$('#loading').hide();
+			$('#fname').html(p.fname);
+			$('#lname').html(p.lname);
+			$('#gender').html(p.gender);
+			$('#birthdate').html(p.birthdate);
+
+			$('#height').html(p.height);
+			$('#systolicbp').html(p.systolicbp);
+			$('#diastolicbp').html(p.diastolicbp);
+			$('#ldl').html(p.ldl);
+			$('#hdl').html(p.hdl);
+		  };
+  
+		FHIR.oauth2
+			.ready()
+			.then(function(smart) {
+				console.log(smart);
+				
+				smart.patient.read()
+				.then(pat => {
+					console.log(pat);
+					var p = defaultPatient();
+					p.gender = pat.gender;
+					p.birthdate = pat.birthDate;
+					p.fname = '';
+					p.lname = '';
+					if (typeof pat.name[0] !== 'undefined') {
+						p.fname = pat.name[0].given.join(' ');
+						p.lname = pat.name[0].family;
+					}
+					drawVisualization(p);					
+				})	
+			})
+			.catch(console.error);
     </script>
   </body>
 </html>
